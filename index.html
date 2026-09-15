@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    :root {
+      --navy: #14213D;
+      --gold: #C9A227;
+      --bg: #F5F6FA;
+      --card: #FFFFFF;
+      --text: #1F2430;
+      --muted: #6B7280;
+      --border: #E5E7EB;
+      --success: #1E8E5A;
+      --danger: #D93025;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Google Sans', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 24px;
+    }
+    .header { text-align: center; margin-bottom: 22px; }
+    .header h1 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--navy);
+      margin: 0;
+      letter-spacing: 0.5px;
+    }
+    .header p {
+      font-size: 12px;
+      color: var(--muted);
+      margin: 4px 0 0 0;
+    }
+    .header .rule {
+      width: 60px; height: 3px; background: var(--gold);
+      margin: 10px auto 0; border-radius: 2px;
+    }
+
+    .stats-row {
+      display: flex; gap: 12px; margin-bottom: 20px;
+    }
+    .stat-card {
+      flex: 1; background: var(--card); border: 1px solid var(--border);
+      border-radius: 8px; padding: 14px; text-align: center;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    .stat-card .num { font-size: 22px; font-weight: 700; color: var(--navy); }
+    .stat-card .lbl { font-size: 11px; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.4px; }
+
+    .main-grid { display: flex; gap: 20px; }
+    .panel {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 18px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .form-panel { flex: 1.1; }
+    .history-panel { flex: 0.9; display: flex; flex-direction: column; }
+
+    .panel h2 {
+      font-size: 13px; font-weight: 700; color: var(--navy);
+      margin: 0 0 14px 0; text-transform: uppercase; letter-spacing: 0.4px;
+      border-bottom: 2px solid var(--gold); padding-bottom: 8px;
+    }
+
+    label { display: block; margin-top: 12px; font-weight: 600; font-size: 12px; color: var(--muted); }
+    input, select, textarea {
+      width: 100%; padding: 8px; margin-top: 4px; border: 1px solid var(--border);
+      border-radius: 6px; box-sizing: border-box; font-size: 13px; font-family: inherit;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--navy); }
+
+    .radio-row { display: flex; gap: 16px; margin-top: 6px; }
+    .radio-row label { display: flex; align-items: center; gap: 4px; font-weight: normal; margin: 0; color: var(--text); }
+
+    button {
+      margin-top: 20px; width: 100%; padding: 11px; background: var(--navy); color: #fff;
+      border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px;
+      letter-spacing: 0.3px;
+    }
+    button:hover { background: #1F2C55; }
+    button:disabled { background: #9aa0a6; cursor: not-allowed; }
+
+    #spinner { display: none; text-align: center; margin-top: 10px; font-size: 12px; color: var(--muted); }
+    #result { margin-top: 14px; padding: 10px; border-radius: 6px; font-size: 12px; display: none; }
+    #result.success { background: #E6F4EA; border: 1px solid var(--success); }
+    #result.error { background: #FCE8E6; border: 1px solid var(--danger); }
+    #result a { display: block; margin-top: 4px; color: var(--navy); font-weight: 600; }
+
+    .history-list { overflow-y: auto; flex: 1; max-height: 420px; }
+    .history-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 12px;
+    }
+    .history-row:last-child { border-bottom: none; }
+    .history-name { font-weight: 600; color: var(--text); }
+    .history-meta { color: var(--muted); font-size: 11px; margin-top: 2px; }
+    .badge {
+      font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 10px;
+      text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .badge.with { background: #E6F4EA; color: var(--success); }
+    .badge.without { background: #FCE8E6; color: var(--danger); }
+    .empty-state { text-align: center; color: var(--muted); font-size: 12px; padding: 30px 0; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>HR DEPARTMENT CERTIFICATE OF EMPLOYMENT (COE) GENERATOR</h1>
+    <p>Human Resource Management Department</p>
+    <div class="rule"></div>
+  </div>
+
+  <div class="stats-row" id="statsRow">
+    <div class="stat-card"><div class="num" id="statTotal">–</div><div class="lbl">Total Issued</div></div>
+    <div class="stat-card"><div class="num" id="statMonth">–</div><div class="lbl">This Month</div></div>
+    <div class="stat-card"><div class="num" id="statWith">–</div><div class="lbl">With Compensation</div></div>
+    <div class="stat-card"><div class="num" id="statWithout">–</div><div class="lbl">Without Compensation</div></div>
+  </div>
+
+  <div class="main-grid">
+    <div class="panel form-panel">
+      <h2>Generate New COE</h2>
+
+      <label for="employeeSearch">Employee</label>
+      <input list="employeeList" id="employeeSearch" placeholder="Type name or ID..." autocomplete="off">
+      <datalist id="employeeList"></datalist>
+      <input type="hidden" id="employeeId">
+
+      <label>Variant</label>
+      <div class="radio-row">
+        <label><input type="radio" name="variant" value="withComp" checked> With Compensation</label>
+        <label><input type="radio" name="variant" value="withoutComp"> Without Compensation</label>
+      </div>
+
+      <label for="requesterName">Requester Name (Short Name)</label>
+      <input type="text" id="requesterName" placeholder="Auto-fills from employee, editable">
+
+      <label for="purpose">Purpose</label>
+      <input type="text" id="purpose" placeholder="e.g. visa application, loan requirement">
+
+      <label for="issuedOn">Issued On</label>
+      <input type="date" id="issuedOn">
+
+      <label for="issuedAt">Issued At</label>
+      <input type="text" id="issuedAt" placeholder="Butuan City">
+
+      <label for="amountPaid">Amount Paid (optional)</label>
+      <input type="text" id="amountPaid" placeholder="N/A">
+
+      <label for="processorName">Processed By</label>
+      <input type="text" id="processorName" placeholder="Your name">
+
+      <button id="submitBtn" onclick="submitForm()">Generate COE</button>
+      <div id="spinner">Generating certificate...</div>
+      <div id="result"></div>
+    </div>
+
+    <div class="panel history-panel">
+      <h2>Recent Issuances</h2>
+      <div class="history-list" id="historyList">
+        <div class="empty-state">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let employees = [];
+
+    google.script.run.withSuccessHandler(populateEmployees).getEmployees();
+    google.script.run.withSuccessHandler(populateStats).getDashboardStats();
+    google.script.run.withSuccessHandler(populateHistory).getRecentIssuances();
+
+    function populateEmployees(list) {
+      employees = list;
+      const datalist = document.getElementById('employeeList');
+      datalist.innerHTML = '';
+      list.forEach(emp => {
+        const opt = document.createElement('option');
+        opt.value = `${emp.fullName} (${emp.id})`;
+        datalist.appendChild(opt);
+      });
+    }
+
+    function populateStats(stats) {
+      document.getElementById('statTotal').textContent = stats.total;
+      document.getElementById('statMonth').textContent = stats.thisMonth;
+      document.getElementById('statWith').textContent = stats.withComp;
+      document.getElementById('statWithout').textContent = stats.withoutComp;
+    }
+
+    function populateHistory(list) {
+      const container = document.getElementById('historyList');
+      if (!list || list.length === 0) {
+        container.innerHTML = '<div class="empty-state">No COEs generated yet.</div>';
+        return;
+      }
+      container.innerHTML = '';
+      list.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'history-row';
+        const badgeClass = item.variant.toLowerCase().includes('without') ? 'without' : 'with';
+        row.innerHTML = `
+          <div>
+            <div class="history-name">${item.requesterName}</div>
+            <div class="history-meta">${item.coeNo} · ${item.date}</div>
+          </div>
+          <span class="badge ${badgeClass}">${item.variant.replace(' Compensation', '')}</span>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    document.getElementById('employeeSearch').addEventListener('input', function () {
+      const val = this.value;
+      const match = employees.find(e => `${e.fullName} (${e.id})` === val);
+      document.getElementById('employeeId').value = match ? match.id : '';
+      if (match) document.getElementById('requesterName').value = match.fullName;
+    });
+
+    document.getElementById('issuedOn').value = new Date().toISOString().split('T')[0];
+
+    function submitForm() {
+      const employeeId = document.getElementById('employeeId').value;
+      if (!employeeId) {
+        alert('Please select a valid employee from the list.');
+        return;
+      }
+
+      const formData = {
+        employeeId: employeeId,
+        variant: document.querySelector('input[name="variant"]:checked').value,
+        requesterName: document.getElementById('requesterName').value,
+        purpose: document.getElementById('purpose').value,
+        issuedOn: document.getElementById('issuedOn').value,
+        issuedAt: document.getElementById('issuedAt').value,
+        amountPaid: document.getElementById('amountPaid').value,
+        processorName: document.getElementById('processorName').value
+      };
+
+      document.getElementById('submitBtn').disabled = true;
+      document.getElementById('spinner').style.display = 'block';
+      document.getElementById('result').style.display = 'none';
+
+      google.script.run
+        .withSuccessHandler(showResult)
+        .withFailureHandler(showError)
+        .generateCOE(formData);
+    }
+
+    function showResult(res) {
+      document.getElementById('submitBtn').disabled = false;
+      document.getElementById('spinner').style.display = 'none';
+      const box = document.getElementById('result');
+      box.style.display = 'block';
+
+      if (res.success) {
+        box.className = 'success';
+        box.innerHTML = `<strong>Generated: ${res.coeNo}</strong>` +
+          (res.docUrl ? `<a href="${res.docUrl}" target="_blank">Open Doc</a>` : '') +
+          `<a href="${res.pdfUrl}" target="_blank">Open PDF</a>`;
+        google.script.run.withSuccessHandler(populateStats).getDashboardStats();
+        google.script.run.withSuccessHandler(populateHistory).getRecentIssuances();
+      } else {
+        box.className = 'error';
+        box.innerHTML = `<strong>Error:</strong> ${res.error}`;
+      }
+    }
+
+    function showError(err) {
+      document.getElementById('submitBtn').disabled = false;
+      document.getElementById('spinner').style.display = 'none';
+      const box = document.getElementById('result');
+      box.style.display = 'block';
+      box.className = 'error';
+      box.innerHTML = `<strong>Error:</strong> ${err.message}`;
+    }
+  </script>
+</body>
+</html>
